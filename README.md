@@ -1,3 +1,11 @@
+# 环境安装命令
+1. `conda create -n graspnet-baseline python=3.9` python版本最高3.9，否则不是配pytorch  
+2. `conda install pytorch==1.10.1 torchvision==0.11.2 torchaudio==0.10.1 cudatoolkit=11.3 -c pytorch -c conda-forge` 安装pytorch
+3. `pip install open3d`
+4. `pip install graspnetAPI` 可能会报错`The 'sklearn' PyPI package is deprecated....`，执行`export SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True`后再次执行pip install graspnetAPI就行了
+5. 修改graspnetAPI库的transforms3d/quaternions.py文件的第26行和27行，修改np.float为np.float64
+6. 修改本项目的dataset/graspnet_dataset.py的第12行`from torch._six import container_abcs`为`import collections.abc as container_abcs`
+
 # GraspNet Baseline
 Baseline model for "GraspNet-1Billion: A Large-Scale Benchmark for General Object Grasping" (CVPR 2020).
 
