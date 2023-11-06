@@ -256,7 +256,7 @@ def load_grasp_labels(root):
         if i == 18: continue
         valid_obj_idxs.append(i + 1) #here align with label png
         label = np.load(os.path.join(root, 'grasp_label', '{}_labels.npz'.format(str(i).zfill(3))))
-        tolerance = np.load(os.path.join(BASE_DIR, 'tolerance', '{}_tolerance.npy'.format(str(i).zfill(3))))
+        tolerance = np.load(os.path.join(root, 'tolerance', '{}_tolerance.npy'.format(str(i).zfill(3))))
         grasp_labels[i + 1] = (label['points'].astype(np.float32), label['offsets'].astype(np.float32),
                                 label['scores'].astype(np.float32), tolerance)
 

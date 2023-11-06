@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_root', required=True, help='Dataset root')
 parser.add_argument('--pos_ratio_thresh', type=float, default=0.8, help='Threshold of positive neighbor ratio[default: 0.8]')
 parser.add_argument('--mu_thresh', type=float, default=0.55, help='Threshold of friction coefficient[default: 0.55]')
-parser.add_argument('--num_workers', type=int, default=50, help='Worker number[default: 50]')
+parser.add_argument('--num_workers', type=int, default=500, help='Worker number[default: 50]')
 cfgs = parser.parse_args()
 
 save_path = 'tolerance'
@@ -76,6 +76,7 @@ def manager(obj_name, pool_size=8):
     for i in range(len(points)):
         saved_tolerance[i] = tolerance[i]
     saved_tolerance = np.array(saved_tolerance)
+    print('{}/{}_tolerance.npy'.format(save_path, obj_name))
     np.save('{}/{}_tolerance.npy'.format(save_path, obj_name), saved_tolerance)
 
 def worker(obj_name, point_ind, params, tolerance):
