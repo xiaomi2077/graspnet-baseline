@@ -109,6 +109,7 @@ def compute_grasp_loss(end_points, use_template_in_training=True):
     grasp_angle_class_loss = torch.sum(grasp_angle_class_loss * loss_mask) / (loss_mask.sum() + 1e-6)
     end_points['loss/stage2_grasp_angle_class_loss'] = grasp_angle_class_loss
     grasp_angle_class_pred = torch.argmax(grasp_angle_class_score, 1)
+    #todo 0度准确率<15<30 可能和旋转目标框检测在0度跳变有关
     end_points['stage2_grasp_angle_class_acc/0_degree'] = (grasp_angle_class_pred==target_angles_cls)[loss_mask.bool()].float().mean()
     acc_mask_15 = ((torch.abs(grasp_angle_class_pred-target_angles_cls)<=1) | (torch.abs(grasp_angle_class_pred-target_angles_cls)>=A-1))
     end_points['stage2_grasp_angle_class_acc/15_degree'] = acc_mask_15[loss_mask.bool()].float().mean()

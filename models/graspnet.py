@@ -14,6 +14,7 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+sys.path.append(os.path.join(ROOT_DIR, 'models'))
 
 from backbone import Pointnet2Backbone
 from modules import ApproachNet, CloudCrop, OperationNet, ToleranceNet

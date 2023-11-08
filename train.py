@@ -13,15 +13,16 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
-sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
-sys.path.append(os.path.join(ROOT_DIR, 'models'))
-sys.path.append(os.path.join(ROOT_DIR, 'dataset'))
-from graspnet import GraspNet, get_loss
-from pytorch_utils import BNMomentumScheduler
-from graspnet_dataset import GraspNetDataset, collate_fn, load_grasp_labels
-from label_generation import process_grasp_labels
+# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+# sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+# sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
+# sys.path.append(os.path.join(ROOT_DIR, 'models'))
+# sys.path.append(os.path.join(ROOT_DIR, 'dataset'))
+
+from models.graspnet import GraspNet, get_loss
+from pointnet2.pytorch_utils import BNMomentumScheduler
+from dataset.graspnet_dataset import GraspNetDataset, collate_fn, load_grasp_labels
+from utils.label_generation import process_grasp_labels
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_root', required=True, help='Dataset root')
@@ -150,7 +151,8 @@ def train_one_epoch():
 
         batch_interval = 10
         if (batch_idx+1) % batch_interval == 0:
-            log_string(' ---- batch: %03d ----' % (batch_idx+1))
+            # log_string(' --epoch: %d/%d--- batch: %03d ----' % (EPOCH_CNT,cfg.max_epoch,batch_idx+1))
+            log_string(f' --epoch: {EPOCH_CNT}/{cfgs.max_epoch} -- batch: {batch_idx+1:03d} ----')
             for key in sorted(stat_dict.keys()):
                 TRAIN_WRITER.add_scalar(key, stat_dict[key]/batch_interval, (EPOCH_CNT*len(TRAIN_DATALOADER)+batch_idx)*cfgs.batch_size)
                 log_string('mean %s: %f'%(key, stat_dict[key]/batch_interval))
@@ -162,7 +164,7 @@ def evaluate_one_epoch():
     net.eval()
     for batch_idx, batch_data_label in enumerate(TEST_DATALOADER):
         if batch_idx % 10 == 0:
-            print('Eval batch: %d'%(batch_idx))
+            print(f'--epoch：{EPOCH_CNT}/{cfgs.max_epoch} --Eval batch: %d'%(batch_idx))
         for key in batch_data_label:
             if 'list' in key:
                 for i in range(len(batch_data_label[key])):

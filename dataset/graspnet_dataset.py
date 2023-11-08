@@ -14,10 +14,10 @@ import collections.abc as container_abcs
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
-from data_utils import CameraInfo, transform_point_cloud, create_point_cloud_from_depth_image,\
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ROOT_DIR = os.path.dirname(BASE_DIR)
+# sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+from utils.data_utils import CameraInfo, transform_point_cloud, create_point_cloud_from_depth_image,\
                             get_workspace_mask, remove_invisible_grasp_points
 
 class GraspNetDataset(Dataset):
@@ -34,7 +34,7 @@ class GraspNetDataset(Dataset):
         self.camera = camera
         self.augment = augment
         self.load_label = load_label
-        self.collision_labels = {}
+        self.collision_labels = {} #每个场景下的物体在自身坐标系下的所有抓取姿态是否碰撞的flag
 
         if split == 'train':
             self.sceneIds = list( range(100) )
@@ -48,12 +48,12 @@ class GraspNetDataset(Dataset):
             self.sceneIds = list( range(160,190) )
         self.sceneIds = ['scene_{}'.format(str(x).zfill(4)) for x in self.sceneIds]
         
-        self.colorpath = []
+        self.colorpath = [] #所有sceneid对应scene下的所有图片路径
         self.depthpath = []
-        self.labelpath = []
+        self.labelpath = [] #物体分割标签，每个像素点的值是物体的id
         self.metapath = []
         self.scenename = []
-        self.frameid = []
+        self.frameid = [] #每个图片在scene下的id。0-255的循环
         for x in tqdm(self.sceneIds, desc = 'Loading data path and collision labels...'):
             for img_num in range(256):
                 self.colorpath.append(os.path.join(root, 'scenes', x, camera, 'rgb', str(img_num).zfill(4)+'.png'))
@@ -249,6 +249,9 @@ class GraspNetDataset(Dataset):
         return ret_dict
 
 def load_grasp_labels(root):
+    '''
+    加载88个物体，在每个物体坐标系下的每个抓取
+    '''
     obj_names = list(range(88))
     valid_obj_idxs = []
     grasp_labels = {}

@@ -10,14 +10,14 @@ import torch
 from torch.utils.data import DataLoader
 from graspnetAPI import GraspGroup, GraspNetEval
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(ROOT_DIR, 'models'))
-sys.path.append(os.path.join(ROOT_DIR, 'dataset'))
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+# sys.path.append(os.path.join(ROOT_DIR, 'models'))
+# sys.path.append(os.path.join(ROOT_DIR, 'dataset'))
+# sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 
-from graspnet import GraspNet, pred_decode
-from graspnet_dataset import GraspNetDataset, collate_fn
-from collision_detector import ModelFreeCollisionDetector
+from models.graspnet import GraspNet, pred_decode
+from dataset.graspnet_dataset import GraspNetDataset, collate_fn
+from utils.collision_detector import ModelFreeCollisionDetector
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_root', required=True, help='Dataset root')
