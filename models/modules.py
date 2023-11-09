@@ -8,15 +8,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
-sys.path.append(ROOT_DIR)
-sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ROOT_DIR = os.path.dirname(BASE_DIR)
+# sys.path.append(ROOT_DIR)
+# sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
+# sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 
-import pytorch_utils as pt_utils
-from pointnet2_utils import CylinderQueryAndGroup
-from loss_utils import generate_grasp_views, batch_viewpoint_params_to_matrix
+import pointnet2.pytorch_utils as pt_utils
+from pointnet2.pointnet2_utils import CylinderQueryAndGroup
+from utils.loss_utils import generate_grasp_views, batch_viewpoint_params_to_matrix
 
 
 class ApproachNet(nn.Module):
@@ -33,10 +33,10 @@ class ApproachNet(nn.Module):
         self.num_view = num_view
         self.in_dim = seed_feature_dim
         self.conv1 = nn.Conv1d(self.in_dim, self.in_dim, 1)
-        self.conv2 = nn.Conv1d(self.in_dim, 2+self.num_view, 1)
-        self.conv3 = nn.Conv1d(2+self.num_view, 2+self.num_view, 1)
+        self.conv2 = nn.Conv1d(self.in_dim, 88+self.num_view, 1)
+        self.conv3 = nn.Conv1d(88+self.num_view, 88+self.num_view, 1)
         self.bn1 = nn.BatchNorm1d(self.in_dim)
-        self.bn2 = nn.BatchNorm1d(2+self.num_view)
+        self.bn2 = nn.BatchNorm1d(88+self.num_view)
 
     def forward(self, seed_xyz, seed_features, end_points):
         """ Forward pass.
@@ -53,15 +53,15 @@ class ApproachNet(nn.Module):
         """
         B, num_seed, _ = seed_xyz.size()
         features = F.relu(self.bn1(self.conv1(seed_features)), inplace=True)
-        features = F.relu(self.bn2(self.conv2(features)), inplace=True)
+        features = F.relu(self.bn2(self.conv2(features)), inplace=True) #B*2+num_view*num_seed = 2*302*1024
         features = self.conv3(features)
-        objectness_score = features[:, :2, :] # (B, 2, num_seed)
-        view_score = features[:, 2:2+self.num_view, :].transpose(1,2).contiguous() # (B, num_seed, num_view)
+        objectness_score = features[:, :88, :] # (B, 2, num_seed)
+        view_score = features[:, 88:88+self.num_view, :].transpose(1,2).contiguous() # (B, num_seed, num_view)
         end_points['objectness_score'] = objectness_score
         end_points['view_score'] = view_score
 
         # print(view_score.min(), view_score.max(), view_score.mean())
-        top_view_scores, top_view_inds = torch.max(view_score, dim=2) # (B, num_seed)
+        top_view_scores, top_view_inds = torch.max(view_score, dim=2) # (B, num_seed) #每个种子点最好的视角的分数和索引
         top_view_inds_ = top_view_inds.view(B, num_seed, 1, 1).expand(-1, -1, -1, 3).contiguous()
         template_views = generate_grasp_views(self.num_view).to(features.device) # (num_view, 3)
         template_views = template_views.view(1, 1, self.num_view, 3).expand(B, num_seed, -1, -1).contiguous() #(B, num_seed, num_view, 3)
@@ -69,10 +69,10 @@ class ApproachNet(nn.Module):
         vp_xyz_ = vp_xyz.view(-1, 3)
         batch_angle = torch.zeros(vp_xyz_.size(0), dtype=vp_xyz.dtype, device=vp_xyz.device)
         vp_rot = batch_viewpoint_params_to_matrix(-vp_xyz_, batch_angle).view(B, num_seed, 3, 3)
-        end_points['grasp_top_view_inds'] = top_view_inds
-        end_points['grasp_top_view_score'] = top_view_scores
-        end_points['grasp_top_view_xyz'] = vp_xyz
-        end_points['grasp_top_view_rot'] = vp_rot
+        end_points['grasp_top_view_inds'] = top_view_inds #B*num_seed 
+        end_points['grasp_top_view_score'] = top_view_scores #B*num_seed
+        end_points['grasp_top_view_xyz'] = vp_xyz #B*num_seed*3
+        end_points['grasp_top_view_rot'] = vp_rot #B*num_seed*3*3
 
         return end_points
 

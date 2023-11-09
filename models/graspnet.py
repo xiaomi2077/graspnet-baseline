@@ -12,15 +12,15 @@ import torch.nn.functional as F
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(ROOT_DIR)
-sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
-sys.path.append(os.path.join(ROOT_DIR, 'models'))
+# sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
+# sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+# sys.path.append(os.path.join(ROOT_DIR, 'models'))
 
-from backbone import Pointnet2Backbone
-from modules import ApproachNet, CloudCrop, OperationNet, ToleranceNet
-from loss import get_loss
-from loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE
-from label_generation import process_grasp_labels, match_grasp_view_and_label, batch_viewpoint_params_to_matrix
+from models.backbone import Pointnet2Backbone
+from models.modules import ApproachNet, CloudCrop, OperationNet, ToleranceNet
+from models.loss import get_loss
+from utils.loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE
+from utils.label_generation import process_grasp_labels, match_grasp_view_and_label, batch_viewpoint_params_to_matrix
 
 
 class GraspNetStage1(nn.Module):
@@ -30,8 +30,12 @@ class GraspNetStage1(nn.Module):
         self.vpmodule = ApproachNet(num_view, 256)
 
     def forward(self, end_points):
-        pointcloud = end_points['point_clouds']
-        seed_features, seed_xyz, end_points = self.backbone(pointcloud, end_points)
+        pointcloud = end_points['point_clouds'] #shape batch_size*num_point*3
+        rgbpic = end_points["cloud_colors"] #shape batch_size*num_point*3
+        backbone_input = torch.cat([pointcloud, rgbpic], dim=-1) #shape batch_size*num_point*6
+        #shape seed_features(B, 256, 1024) B*feature_dim*num_seed 
+        #shape seed_xyz(B, 1024, 3) B*num_seed*xzy
+        seed_features, seed_xyz, end_points = self.backbone(backbone_input, end_points)
         end_points = self.vpmodule(seed_xyz, seed_features, end_points)
         return end_points
 
@@ -111,7 +115,7 @@ def pred_decode(end_points):
 
         ## slice preds by objectness
         objectness_pred = torch.argmax(objectness_score, 0)
-        objectness_mask = (objectness_pred==1)
+        objectness_mask = (objectness_pred==1) #todo 这里需要修改，现在尝试让grasp有类别，但是这里还是按没有类别写。不影响训练，影响test和demo
         grasp_score = grasp_score[objectness_mask]
         grasp_width = grasp_width[objectness_mask]
         grasp_depth = grasp_depth[objectness_mask]

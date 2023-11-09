@@ -10,12 +10,12 @@ import sys
 import os
 import time
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
-sys.path.append(ROOT_DIR)
-sys.path.append(os.path.join(ROOT_DIR, 'utils'))
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ROOT_DIR = os.path.dirname(BASE_DIR)
+# sys.path.append(ROOT_DIR)
+# sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 
-from loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE, THRESH_GOOD, THRESH_BAD,\
+from utils.loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE, THRESH_GOOD, THRESH_BAD,\
                        transform_point_cloud, generate_grasp_views,\
                        batch_viewpoint_params_to_matrix, huber_loss
 
@@ -32,15 +32,15 @@ def compute_objectness_loss(end_points):
     objectness_score = end_points['objectness_score']
     objectness_label = end_points['objectness_label']
     fp2_inds = end_points['fp2_inds'].long()
-    objectness_label = torch.gather(objectness_label, 1, fp2_inds)
-    loss = criterion(objectness_score, objectness_label)
+    objectness_label = torch.gather(objectness_label, 1, fp2_inds) #B*1024 1024个点的objectness_label
+    loss = criterion(objectness_score, objectness_label) #B*2*1024
 
     end_points['loss/stage1_objectness_loss'] = loss
     objectness_pred = torch.argmax(objectness_score, 1)
     end_points['stage1_objectness_acc'] = (objectness_pred == objectness_label.long()).float().mean()
 
-    end_points['stage1_objectness_prec'] = (objectness_pred == objectness_label.long())[objectness_pred == 1].float().mean()
-    end_points['stage1_objectness_recall'] = (objectness_pred == objectness_label.long())[objectness_label == 1].float().mean()
+    end_points['stage1_objectness_prec'] = (objectness_pred == objectness_label.long())[objectness_pred == objectness_label.long()].float().mean()
+    end_points['stage1_objectness_recall'] = (objectness_pred == objectness_label.long())[objectness_label == objectness_label.long()].float().mean()
 
     return loss, end_points
 

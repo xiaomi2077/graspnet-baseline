@@ -6,12 +6,12 @@ import sys
 import torch
 import torch.nn as nn
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
-sys.path.append(ROOT_DIR)
-sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ROOT_DIR = os.path.dirname(BASE_DIR)
+# sys.path.append(ROOT_DIR)
+# sys.path.append(os.path.join(ROOT_DIR, 'pointnet2'))
 
-from pointnet2_modules import PointnetSAModuleVotes, PointnetFPModule
+from pointnet2.pointnet2_modules import PointnetSAModuleVotes, PointnetFPModule
 
 class Pointnet2Backbone(nn.Module):
     r"""
@@ -103,29 +103,29 @@ class Pointnet2Backbone(nn.Module):
 
         # --------- 4 SET ABSTRACTION LAYERS ---------
         xyz, features, fps_inds = self.sa1(xyz, features)
-        end_points['sa1_inds'] = fps_inds
-        end_points['sa1_xyz'] = xyz
-        end_points['sa1_features'] = features
+        end_points['sa1_inds'] = fps_inds #shape (B, 2048)
+        end_points['sa1_xyz'] = xyz #shape (B, 2048, 3)
+        end_points['sa1_features'] = features #shape (B, 128, 2048)
 
         xyz, features, fps_inds = self.sa2(xyz, features) # this fps_inds is just 0,1,...,1023
-        end_points['sa2_inds'] = fps_inds
-        end_points['sa2_xyz'] = xyz
-        end_points['sa2_features'] = features
+        end_points['sa2_inds'] = fps_inds #shape (B, 1024)
+        end_points['sa2_xyz'] = xyz #shape (B, 1024, 3)
+        end_points['sa2_features'] = features #shape (B, 256, 1024)
 
         xyz, features, fps_inds = self.sa3(xyz, features) # this fps_inds is just 0,1,...,511
-        end_points['sa3_xyz'] = xyz
-        end_points['sa3_features'] = features
+        end_points['sa3_xyz'] = xyz #shape (B, 512, 3)
+        end_points['sa3_features'] = features #shape (B, 256, 512)
 
         xyz, features, fps_inds = self.sa4(xyz, features) # this fps_inds is just 0,1,...,255
-        end_points['sa4_xyz'] = xyz
-        end_points['sa4_features'] = features
+        end_points['sa4_xyz'] = xyz #shape (B, 256, 3)
+        end_points['sa4_features'] = features #shape (B, 256, 256)
 
         # --------- 2 FEATURE UPSAMPLING LAYERS --------
-        features = self.fp1(end_points['sa3_xyz'], end_points['sa4_xyz'], end_points['sa3_features'], end_points['sa4_features'])
-        features = self.fp2(end_points['sa2_xyz'], end_points['sa3_xyz'], end_points['sa2_features'], features)
-        end_points['fp2_features'] = features
-        end_points['fp2_xyz'] = end_points['sa2_xyz']
-        num_seed = end_points['fp2_xyz'].shape[1]
-        end_points['fp2_inds'] = end_points['sa1_inds'][:,0:num_seed] # indices among the entire input point clouds
+        features = self.fp1(end_points['sa3_xyz'], end_points['sa4_xyz'], end_points['sa3_features'], end_points['sa4_features']) #shape (B, 256, 512)
+        features = self.fp2(end_points['sa2_xyz'], end_points['sa3_xyz'], end_points['sa2_features'], features) #shape (B, 256, 1024)
+        end_points['fp2_features'] = features #shape (B, 256, 1024)
+        end_points['fp2_xyz'] = end_points['sa2_xyz'] #shape (B, 1024, 3)
+        num_seed = end_points['fp2_xyz'].shape[1] # 1024
+        end_points['fp2_inds'] = end_points['sa1_inds'][:,0:num_seed] # indices among the entire input point clouds #shape (B, 1024)
 
         return features, end_points['fp2_xyz'], end_points
