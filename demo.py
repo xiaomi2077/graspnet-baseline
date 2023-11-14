@@ -6,6 +6,7 @@ import os
 import sys
 import numpy as np
 import open3d as o3d
+import open3d.visualization.gui as gui
 import argparse
 import importlib
 import scipy.io as scio
@@ -35,7 +36,7 @@ cfgs = parser.parse_args()
 
 def get_net():
     # Init the model
-    net = GraspNet(input_feature_dim=0, num_view=cfgs.num_view, num_angle=12, num_depth=4,
+    net = GraspNet(input_feature_dim=3, num_view=cfgs.num_view, num_angle=12, num_depth=4,
             cylinder_radius=0.05, hmin=-0.02, hmax_list=[0.01,0.02,0.03,0.04], is_training=False)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     net.to(device)
@@ -85,7 +86,7 @@ def get_and_process_data(data_dir):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     cloud_sampled = cloud_sampled.to(device)
     end_points['point_clouds'] = cloud_sampled
-    end_points['cloud_colors'] = color_sampled
+    end_points['cloud_colors'] = torch.from_numpy(color_sampled[np.newaxis]).to(device)
 
     return end_points, cloud
 
@@ -104,6 +105,35 @@ def collision_detection(gg, cloud):
     gg = gg[~collision_mask]
     return gg
 
+def save_grasps(gg, cloud,save_dir):
+    gg.nms()
+    gg.sort_by_score()
+    gg = gg[:50]
+    len_grasp = len(gg)
+    # cls_points = o3d.geometry.PointCloud()
+    # cls_points.points = o3d.utility.Vector3dVector(gg.translations)
+    # colors = np.random.uniform(0.0, 1.0, size=[len_grasp, 3])
+    # cls_points.colors = o3d.utility.Vector3dVector(colors)
+
+    grippers = gg.to_open3d_geometry_list()
+    # o3d.visualization.draw_geometries([cloud, *grippers,cls_points])
+    app = gui.Application.instance
+    app.initialize()
+    vis = o3d.visualization.O3DVisualizer("GraspNet", 1280, 720)
+    vis.add_geometry("scene_cloud", cloud)
+    combined_mesh = o3d.geometry.TriangleMesh()
+    for gripper_mesh in grippers:
+        combined_mesh += gripper_mesh
+
+    vis.add_geometry("grasp_mash", combined_mesh)
+    # vis.add_geometry("grasp_cls", cls_points)
+    for i in range(len_grasp):
+        vis.add_3d_label(gg.translations[i], str(gg.object_ids[i]))
+    vis.reset_camera_to_default()
+    app.add_window(vis)
+    app.run()
+
+
 def vis_grasps(gg, cloud):
     gg.nms()
     gg.sort_by_score()
@@ -119,7 +149,8 @@ def demo(data_dir):
     gg = get_grasps(net, end_points)
     if cfgs.collision_thresh > 0:
         gg = collision_detection(gg, np.array(cloud.points))
-    vis_grasps(gg, cloud)
+    # vis_grasps(gg, cloud)
+    save_grasps(gg, cloud,"~/download/tmpdata1")
 
 if __name__=='__main__':
     data_dir = 'doc/example_data'

@@ -1,4 +1,5 @@
 import torch.nn
+import torch
 
 loss = torch.nn.CrossEntropyLoss(reduction='mean')
 
@@ -46,3 +47,7 @@ aa = torch.tensor([[1,2,3],
                     [-1,2,3]])
 mask = (aa>0)
 mask_aa = aa[mask]
+
+ab = torch.tensort(float('nan'))
+if torch.isnan(ab):
+    print('nan')
