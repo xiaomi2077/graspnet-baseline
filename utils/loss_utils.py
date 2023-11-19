@@ -3,7 +3,9 @@
 """
 
 import torch
+import torch.nn as nn
 import numpy as np
+import math
 
 GRASP_MAX_WIDTH = 0.1
 GRASP_MAX_TOLERANCE = 0.05
@@ -113,3 +115,13 @@ def huber_loss(error, delta=1.0):
     linear = (abs_error - quadratic)
     loss = 0.5 * quadratic**2 + delta * linear
     return loss
+
+class myAngleLoss(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, pred_scores, gt_angles):
+        diff = torch.abs(pred_scores - gt_angles)
+        loss = torch.min(diff,torch.abs(math.pi-diff))
+        # return torch.mean(loss)
+        return loss

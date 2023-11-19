@@ -162,7 +162,8 @@ class OperationNet(nn.Module):
 
         self.conv1 = nn.Conv1d(256, 128, 1)
         self.conv2 = nn.Conv1d(128, 128, 1)
-        self.conv3 = nn.Conv1d(128, 3*num_angle, 1)
+        # self.conv3 = nn.Conv1d(128, 3*num_angle, 1)
+        self.conv3 = nn.Conv1d(128, 2*num_angle+1, 1)
         self.bn1 = nn.BatchNorm1d(128)
         self.bn2 = nn.BatchNorm1d(128)
 
@@ -182,12 +183,13 @@ class OperationNet(nn.Module):
         vp_features = F.relu(self.bn1(self.conv1(vp_features)), inplace=True)
         vp_features = F.relu(self.bn2(self.conv2(vp_features)), inplace=True)
         vp_features = self.conv3(vp_features)
-        vp_features = vp_features.view(B, -1, num_seed, num_depth)
+        vp_features = vp_features.view(B, -1, num_seed, num_depth) #shape 2*(3*12)*1024*4
 
         # split prediction
         end_points['grasp_score_pred'] = vp_features[:, 0:self.num_angle]
-        end_points['grasp_angle_cls_pred'] = vp_features[:, self.num_angle:2*self.num_angle]
-        end_points['grasp_width_pred'] = vp_features[:, 2*self.num_angle:3*self.num_angle]
+        # end_points['grasp_angle_cls_pred'] = vp_features[:, self.num_angle:2*self.num_angle] #shape 2*12*1024*4
+        end_points['grasp_angle_cls_pred'] = vp_features[:, self.num_angle] #shape 2*1*1024*4
+        end_points['grasp_width_pred'] = vp_features[:, self.num_angle+1:2*self.num_angle+1]
         return end_points
 
     

@@ -244,7 +244,7 @@ class GraspNetDataset(Dataset):
         ret_dict['object_poses_list'] = object_poses_list #每一个元素表示该场景中一个物体的所有抓取姿态的位姿变换矩阵4*4 #shape num_ojbects*3*4
         ret_dict['grasp_points_list'] = grasp_points_list #shape num_objects*300*3 #每一个元素表示该场景中一个物体的所有抓取姿态的抓取点的坐标 #每个物体有300个抓取姿态
         ret_dict['grasp_offsets_list'] = grasp_offsets_list #shape num_objects*300*300*12*4*3 #每一个元素表示该场景中一个物体的所有抓取姿态的抓取点的偏移量。 最后4个维度：视角，旋转，深度，宽度
-        ret_dict['grasp_labels_list'] = grasp_scores_list #shape num_objects*300*300*12*14 #抓取分数
+        ret_dict['grasp_labels_list'] = grasp_scores_list #shape num_objects*300*300*12*4 #抓取分数
         ret_dict['grasp_tolerance_list'] = grasp_tolerance_list #shape num_objects*300*300*12*4 #抓取容差
 
         return ret_dict
