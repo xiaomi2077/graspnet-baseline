@@ -84,19 +84,23 @@ def pred_decode(end_points):
     grasp_preds = []
     for i in range(batch_size):
         ## load predictions
-        objectness_score = end_points['objectness_score'][i].float()
-        grasp_score = end_points['grasp_score_pred'][i].float()
-        grasp_center = end_points['fp2_xyz'][i].float()
-        approaching = -end_points['grasp_top_view_xyz'][i].float()
-        grasp_angle_class_score = end_points['grasp_angle_cls_pred'][i]
-        grasp_width = 1.2 * end_points['grasp_width_pred'][i]
+        objectness_score = end_points['objectness_score'][i].float() #shape 89*1024
+        grasp_score = end_points['grasp_score_pred'][i].float() #shape 12*1024*4
+        grasp_center = end_points['fp2_xyz'][i].float() #shape 1024*3
+        approaching = -end_points['grasp_top_view_xyz'][i].float() #shape 1024*3
+        grasp_angle_class_score = end_points['grasp_angle_cls_pred'][i] #shape 1024*4
+        grasp_width = 1.2 * end_points['grasp_width_pred'][i] #shape 12*1024*4
         grasp_width = torch.clamp(grasp_width, min=0, max=GRASP_MAX_WIDTH)
-        grasp_tolerance = end_points['grasp_tolerance_pred'][i]
+        grasp_tolerance = end_points['grasp_tolerance_pred'][i] #shape 12*1024*4
 
         ## slice preds by angle
         # grasp angle
-        grasp_angle_class = torch.argmax(grasp_angle_class_score, 0)
-        grasp_angle = grasp_angle_class.float() / 12 * np.pi
+        # grasp_angle_class = torch.argmax(grasp_angle_class_score, 0)
+        # grasp_angle = grasp_angle_class.float() / 12 * np.pi
+        #连续值变成离散的角度值
+        grasp_angle = (grasp_angle_class_score+np.pi)%np.pi
+        grasp_angle_class = (grasp_angle/(np.pi/12)).to(torch.int64)
+
         # grasp score & width & tolerance
         grasp_angle_class_ = grasp_angle_class.unsqueeze(0)
         grasp_score = torch.gather(grasp_score, 0, grasp_angle_class_).squeeze(0)
@@ -115,7 +119,7 @@ def pred_decode(end_points):
 
         ## slice preds by objectness
         objectness_pred = torch.argmax(objectness_score, 0)
-        objectness_mask = (objectness_pred>=1) #todo 这里需要修改，现在尝试让grasp有类别，但是这里还是按没有类别写。不影响训练，影响test和demo
+        objectness_mask = (objectness_pred>=1) #endtodo 这里需要修改，现在尝试让grasp有类别，但是这里还是按没有类别写。不影响训练，影响test和demo
         grasp_score = grasp_score[objectness_mask]
         grasp_width = grasp_width[objectness_mask]
         grasp_depth = grasp_depth[objectness_mask]
