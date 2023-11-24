@@ -33,10 +33,10 @@ class ApproachNet(nn.Module):
         self.num_view = num_view
         self.in_dim = seed_feature_dim
         self.conv1 = nn.Conv1d(self.in_dim, self.in_dim, 1)
-        self.conv2 = nn.Conv1d(self.in_dim, 89+self.num_view, 1)
-        self.conv3 = nn.Conv1d(89+self.num_view, 89+self.num_view, 1)
+        self.conv2 = nn.Conv1d(self.in_dim, 2+self.num_view, 1)
+        self.conv3 = nn.Conv1d(2+self.num_view, 2+self.num_view, 1)
         self.bn1 = nn.BatchNorm1d(self.in_dim)
-        self.bn2 = nn.BatchNorm1d(89+self.num_view)
+        self.bn2 = nn.BatchNorm1d(2+self.num_view)
 
     def forward(self, seed_xyz, seed_features, end_points):
         """ Forward pass.
@@ -55,8 +55,8 @@ class ApproachNet(nn.Module):
         features = F.relu(self.bn1(self.conv1(seed_features)), inplace=True)
         features = F.relu(self.bn2(self.conv2(features)), inplace=True) #B*2+num_view*num_seed = 2*302*1024
         features = self.conv3(features)
-        objectness_score = features[:, :89, :] # (B, 2, num_seed)
-        view_score = features[:, 89:89+self.num_view, :].transpose(1,2).contiguous() # (B, num_seed, num_view)
+        objectness_score = features[:, :2, :] # (B, 2, num_seed)
+        view_score = features[:, 2:2+self.num_view, :].transpose(1,2).contiguous() # (B, num_seed, num_view)
         end_points['objectness_score'] = objectness_score
         end_points['view_score'] = view_score
 

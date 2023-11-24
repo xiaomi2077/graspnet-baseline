@@ -1,3 +1,3 @@
 # CUDA_VISIBLE_DEVICES=0 python test.py --dump_dir logs/dump_rs --checkpoint_path logs/log_rs/checkpoint.tar --camera realsense --dataset_root /data/Benchmark/graspnet
 # CUDA_VISIBLE_DEVICES=0 python test.py --dump_dir logs/dump_kn --checkpoint_path logs/log_kn/checkpoint.tar --camera kinect --dataset_root /data/Benchmark/graspnet
-CUDA_VISIBLE_DEVICES=0 python test.py --dump_dir /home/data/chenzhenshan/develop/model_val_logs/design_angle_loss_dump_rs_2 --checkpoint_path /home/data/chenzhenshan/develop/graspnet-baseline/weights/checkpoint-rs_design_angle_loss.tar --camera realsense --dataset_root /home/data/dataset/graspnet
+CUDA_VISIBLE_DEVICES=0 python test.py --dump_dir /home/data/chenzhenshan/develop/model_val_logs/only_regression_angle_loss --checkpoint_path /home/data/chenzhenshan/develop/graspnet-baseline/weights/checkpoint_only_regression_angle_loss.tar --camera realsense --dataset_root /home/data/dataset/graspnet

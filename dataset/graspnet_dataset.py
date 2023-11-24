@@ -198,7 +198,7 @@ class GraspNetDataset(Dataset):
         color_sampled = color_masked[idxs] #shape self.num_points*3 rgb
         seg_sampled = seg_masked[idxs] #shape self.num_points 0-88 object id
         objectness_label = seg_sampled.copy() #让objectness_label支持多个物体类别标签
-        # objectness_label[objectness_label>1] = 1 #shape self.num_points 0-1 1表示有物体
+        objectness_label[objectness_label>1] = 1 #shape self.num_points 0-1 1表示有物体
         
         object_poses_list = [] #每个元素是一个list，每个list里是一个物体的位姿变换矩阵4*4
         grasp_points_list = [] #每一个元素是一个list，每个list里是一个物体的所有抓取姿态的抓取点的坐标

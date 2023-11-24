@@ -119,7 +119,7 @@ def pred_decode(end_points):
 
         ## slice preds by objectness
         objectness_pred = torch.argmax(objectness_score, 0)
-        objectness_mask = (objectness_pred>=1) #endtodo 这里需要修改，现在尝试让grasp有类别，但是这里还是按没有类别写。不影响训练，影响test和demo
+        objectness_mask = (objectness_pred==1) #endtodo 这里需要修改，现在尝试让grasp有类别，但是这里还是按没有类别写。不影响训练，影响test和demo
         grasp_score = grasp_score[objectness_mask]
         grasp_width = grasp_width[objectness_mask]
         grasp_depth = grasp_depth[objectness_mask]
@@ -138,7 +138,7 @@ def pred_decode(end_points):
 
         # merge preds
         grasp_height = 0.02 * torch.ones_like(grasp_score)
-        # obj_ids = -1 * torch.ones_like(grasp_score)
-        obj_ids = objectness_pred[objectness_mask].unsqueeze(1)
+        obj_ids = -1 * torch.ones_like(grasp_score)
+        # obj_ids = objectness_pred[objectness_mask].unsqueeze(1)
         grasp_preds.append(torch.cat([grasp_score, grasp_width, grasp_height, grasp_depth, rotation_matrix, grasp_center, obj_ids], axis=1))
     return grasp_preds
