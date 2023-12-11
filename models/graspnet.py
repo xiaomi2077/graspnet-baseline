@@ -17,7 +17,7 @@ sys.path.append(ROOT_DIR)
 # sys.path.append(os.path.join(ROOT_DIR, 'models'))
 
 from models.backbone import Pointnet2Backbone
-from models.modules import ApproachNet, CloudCrop, OperationNet, ToleranceNet
+from models.modules import ApproachNet, CloudCrop, OperationNet, ToleranceNet,PicFeatureExtractorNet
 from models.loss import get_loss
 from utils.loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE
 from utils.label_generation import process_grasp_labels, match_grasp_view_and_label, batch_viewpoint_params_to_matrix
@@ -28,11 +28,13 @@ class GraspNetStage1(nn.Module):
         super().__init__()
         self.backbone = Pointnet2Backbone(input_feature_dim)
         self.vpmodule = ApproachNet(num_view, 256)
+        self.picfeatureextractor = PicFeatureExtractorNet(input_feature_dim)
 
     def forward(self, end_points):
         pointcloud = end_points['point_clouds'] #shape batch_size*num_point*3
         rgbpic = end_points["cloud_colors"] #shape batch_size*num_point*3
-        backbone_input = torch.cat([pointcloud, rgbpic], dim=-1) #shape batch_size*num_point*6
+        rgbfeature = self.picfeatureextractor(rgbpic)
+        backbone_input = torch.cat([pointcloud, rgbfeature], dim=-1) #shape batch_size*num_point*6
         #shape seed_features(B, 256, 1024) B*feature_dim*num_seed 
         #shape seed_xyz(B, 1024, 3) B*num_seed*xzy
         seed_features, seed_xyz, end_points = self.backbone(backbone_input, end_points)
