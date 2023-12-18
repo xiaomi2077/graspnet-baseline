@@ -181,7 +181,7 @@ class OperationNet(nn.Module):
         self.conv1 = nn.Conv1d(256, 128, 1)
         self.conv2 = nn.Conv1d(128, 128, 1)
         # self.conv3 = nn.Conv1d(128, 3*num_angle, 1)
-        self.conv3 = nn.Conv1d(128, 2*num_angle+1, 1)
+        self.conv3 = nn.Conv1d(128, 2*num_angle+1, 1) #角度分类转回归的修改
         self.bn1 = nn.BatchNorm1d(128)
         self.bn2 = nn.BatchNorm1d(128)
 
@@ -210,6 +210,16 @@ class OperationNet(nn.Module):
         end_points['grasp_width_pred'] = vp_features[:, self.num_angle+1:2*self.num_angle+1]
         return end_points
 
+class ClassifycationNet(nn.Module):
+    '''
+    抓取的分类头
+    在objectness=1的基础上，对点云点进行分类
+    '''
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def forward(self, end_points):
+        pass
     
 class ToleranceNet(nn.Module):
     """ Grasp tolerance prediction.

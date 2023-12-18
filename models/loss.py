@@ -40,21 +40,21 @@ def compute_objectness_loss(end_points):
     objectness_pred = torch.argmax(objectness_score, 1) #shape B*1024
     end_points['stage1_objectness_acc'] = (objectness_pred == objectness_label.long()).float().mean()
 
-    # prec = []
-    # recall = []
-    # for c in range(1,89):
-    #     cur_prec = (objectness_pred == objectness_label.long())[objectness_pred == c].float().mean()
-    #     cur_recall = (objectness_pred == objectness_label.long())[objectness_label == c].float().mean()
+    prec = []
+    recall = []
+    for c in range(1,89):
+        cur_prec = (objectness_pred == objectness_label.long())[objectness_pred == c].float().mean()
+        cur_recall = (objectness_pred == objectness_label.long())[objectness_label == c].float().mean()
         
-    #     if torch.isnan(cur_prec)==False:
-    #         prec.append(cur_prec.item())
-    #     if torch.isnan(cur_recall)==False:
-    #         recall.append(cur_recall.item())
-    # end_points["stage1_objectness_prec"] = torch.tensor(prec).mean()
-    # end_points["stage1_objectness_recall"] = torch.tensor(recall).mean()
+        if torch.isnan(cur_prec)==False:
+            prec.append(cur_prec.item())
+        if torch.isnan(cur_recall)==False:
+            recall.append(cur_recall.item())
+    end_points["stage1_objectness_prec"] = torch.tensor(prec).mean()
+    end_points["stage1_objectness_recall"] = torch.tensor(recall).mean()
 
-    end_points['stage1_objectness_prec'] = (objectness_pred == objectness_label.long())[objectness_pred == 1].float().mean()
-    end_points['stage1_objectness_recall'] = (objectness_pred == objectness_label.long())[objectness_label == 1].float().mean()
+    # end_points['stage1_objectness_prec'] = (objectness_pred == objectness_label.long())[objectness_pred == 1].float().mean()
+    # end_points['stage1_objectness_recall'] = (objectness_pred == objectness_label.long())[objectness_label == 1].float().mean()
 
     return loss, end_points
 
