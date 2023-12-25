@@ -77,7 +77,7 @@ TEST_DATALOADER = DataLoader(TEST_DATASET, batch_size=cfgs.batch_size, shuffle=F
     num_workers=4, worker_init_fn=my_worker_init_fn, collate_fn=collate_fn)
 print(len(TRAIN_DATALOADER), len(TEST_DATALOADER))
 # Init the model and optimzier
-net = GraspNet(input_feature_dim=50, num_view=cfgs.num_view, num_angle=12, num_depth=4,
+net = GraspNet(input_feature_dim=256, num_view=cfgs.num_view, num_angle=12, num_depth=4,
                         cylinder_radius=0.05, hmin=-0.02, hmax_list=[0.01,0.02,0.03,0.04])
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
