@@ -97,11 +97,11 @@ def pred_decode(end_points):
 
         ## slice preds by angle
         # grasp angle
-        # grasp_angle_class = torch.argmax(grasp_angle_class_score, 0)
-        # grasp_angle = grasp_angle_class.float() / 12 * np.pi
+        grasp_angle_class = torch.argmax(grasp_angle_class_score, 0)
+        grasp_angle = grasp_angle_class.float() / 12 * np.pi
         #连续值变成离散的角度值
-        grasp_angle = (grasp_angle_class_score+np.pi)%np.pi
-        grasp_angle_class = (grasp_angle/(np.pi/12)).to(torch.int64)
+        # grasp_angle = (grasp_angle_class_score+np.pi)%np.pi
+        # grasp_angle_class = (grasp_angle/(np.pi/12)).to(torch.int64)
 
         # grasp score & width & tolerance
         grasp_angle_class_ = grasp_angle_class.unsqueeze(0)

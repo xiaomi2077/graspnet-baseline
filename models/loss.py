@@ -19,6 +19,7 @@ import math
 from utils.loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE, THRESH_GOOD, THRESH_BAD,\
                        transform_point_cloud, generate_grasp_views,\
                        batch_viewpoint_params_to_matrix, huber_loss,myAngleLoss
+from utils.smooth_label import angle_smooth_label_multi #平滑标签
 
 def get_loss(end_points):
     objectness_loss, end_points = compute_objectness_loss(end_points)
@@ -116,10 +117,12 @@ def compute_grasp_loss(end_points, use_template_in_training=True):
     end_points['loss/stage2_grasp_score_loss'] = grasp_score_loss
 
     # 2. inplane rotation cls loss
-    target_angles_cls = target_labels_inds.squeeze(2) # (B, Ns, D)
+    target_angles_cls = target_labels_inds.squeeze(2) # (B, Ns, D) #shape 2*1024*4
+    smooth_target_angles_cls = torch.from_numpy(angle_smooth_label_multi(target_angles_cls.cpu().to(torch.float), 12,0,1,1)).permute(0,2,1,3).to(target_angles_cls.device) #shape 2*12*1024*4
     criterion_grasp_angle_class = nn.CrossEntropyLoss(reduction='none')
-    grasp_angle_class_score = end_points['grasp_angle_cls_pred'] #shape 2*1024*4
-    grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, target_angles_cls)
+    grasp_angle_class_score = end_points['grasp_angle_cls_pred'] #shape 2*12*1024*4
+    # grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, target_angles_cls)
+    grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, smooth_target_angles_cls)
     grasp_angle_class_loss = torch.sum(grasp_angle_class_loss * loss_mask) / (loss_mask.sum() + 1e-6)
     end_points['loss/stage2_grasp_angle_class_loss'] = grasp_angle_class_loss
     grasp_angle_class_pred = torch.argmax(grasp_angle_class_score, 1)
