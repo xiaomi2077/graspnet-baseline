@@ -117,7 +117,7 @@ def angle_smooth_label(angle_label, angle_range=90, label_type=0, radius=4, omeg
     angle_range /= omega #连续角度范围转化为离散的范围类别
     angle_label /= omega
 
-    angle_label = np.array(-np.round(angle_label), np.int32) #连续的要转化的角度转化为离散的角度类别
+    angle_label = np.array(np.round(angle_label), np.int32) #连续的要转化的角度转化为离散的角度类别
     all_smooth_label = get_all_smooth_label(int(angle_range), label_type, radius) #获取angle_range范围内所有的smooth label。一个angle对应一个脉冲曲线
     inx = angle_label == angle_range #不包含angle=angle_range的情况
     angle_label[inx] = angle_range - 1
@@ -132,7 +132,7 @@ def angle_smooth_label_multi(angle_label, angle_range=90, label_type=0, radius=4
     angle_label /= omega
     
     def _smooth_label(input):
-        input = np.array(-np.round(input), np.int32)
+        input = np.array(np.round(input), np.int32)
         
         all_smooth_label = get_all_smooth_label(int(angle_range), label_type, radius)
 
@@ -152,14 +152,20 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     # angle_label = np.array([-89.9, -45.2, -0.3, -1.9])
-    angle_label = np.array([6.0])
-    smooth_label = angle_smooth_label(angle_label,12,0,1,1)
-    print(smooth_label)
-
-    # one_smooth_label = get_all_smooth_label(12,3,4)
-
     x = np.array(range(0, 12, 1))
-    plt.plot(x, smooth_label[0], "r-", linewidth=2)
+    fig = plt.figure()
+
+    for i in range(12):
+        angle_label = np.array([float(i)])
+        smooth_label = angle_smooth_label(angle_label,12,0,1,1)
+        ax2 = fig.add_subplot(3,4,i+1)
+        ax2.plot(x, smooth_label[0], "r-", linewidth=2)
+        ax2.set_label("angle_cls:{}".format(i))
+        ax2.title.set_text("angle_cls:{}".format(i))
+
+    # plt.title("Gaussian label")
+
+    # plt.plot(x, smooth_label[0], "r-", linewidth=2)
     # plt.plot(x, one_smooth_label[6], "b-", linewidth=2)
     # plt.plot(x, one_smooth_label[11], "y-", linewidth=2)
 
@@ -173,5 +179,5 @@ if __name__ == '__main__':
     # plt.plot(x, y_sig3, "y-", linewidth=2, label="pulse")
     # plt.plot(x, y_sig4, "b-", linewidth=2, label="triangle3-180")
 
-    plt.grid(True)
+    # plt.grid(True)
     plt.show()
