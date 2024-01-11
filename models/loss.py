@@ -118,7 +118,7 @@ def compute_grasp_loss(end_points, use_template_in_training=True):
 
     # 2. inplane rotation cls loss
     target_angles_cls = target_labels_inds.squeeze(2) # (B, Ns, D) #shape 2*1024*4
-    smooth_target_angles_cls = torch.from_numpy(angle_smooth_label_multi(target_angles_cls.cpu().to(torch.float), 12,0,1,1)).permute(0,2,1,3).to(target_angles_cls.device) #shape 2*12*1024*4
+    smooth_target_angles_cls = torch.from_numpy(angle_smooth_label_multi(target_angles_cls.cpu().to(torch.float), 12,2,1,1)).permute(0,2,1,3).to(target_angles_cls.device) #shape 2*12*1024*4
     criterion_grasp_angle_class = nn.CrossEntropyLoss(reduction='none')
     grasp_angle_class_score = end_points['grasp_angle_cls_pred'] #shape 2*12*1024*4
     # grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, target_angles_cls)

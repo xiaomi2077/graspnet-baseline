@@ -36,7 +36,7 @@ cfgs = parser.parse_args()
 
 def get_net():
     # Init the model
-    net = GraspNet(input_feature_dim=3, num_view=cfgs.num_view, num_angle=12, num_depth=4,
+    net = GraspNet(input_feature_dim=50, num_view=cfgs.num_view, num_angle=12, num_depth=4,
             cylinder_radius=0.05, hmin=-0.02, hmax_list=[0.01,0.02,0.03,0.04], is_training=False)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     net.to(device)

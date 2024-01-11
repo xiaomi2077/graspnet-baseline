@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
     for i in range(12):
         angle_label = np.array([float(i)])
-        smooth_label = angle_smooth_label(angle_label,12,0,1,1)
+        smooth_label = angle_smooth_label(angle_label,12,3,1,1)
         ax2 = fig.add_subplot(3,4,i+1)
         ax2.plot(x, smooth_label[0], "r-", linewidth=2)
         ax2.set_label("angle_cls:{}".format(i))
