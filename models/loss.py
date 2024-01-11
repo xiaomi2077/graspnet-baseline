@@ -10,6 +10,8 @@ import sys
 import os
 import time
 
+from models.smooth_label import angle_smooth_label_multi
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(ROOT_DIR)
@@ -103,9 +105,10 @@ def compute_grasp_loss(end_points, use_template_in_training=True):
 
     # 2. inplane rotation cls loss
     target_angles_cls = target_labels_inds.squeeze(2) # (B, Ns, D)
+    smooth_target_angles_cls = torch.from_numpy(angle_smooth_label_multi(target_angles_cls.cpu().to(torch.float), 12,0,1,1)).permute(0,2,1,3).to(target_angles_cls.device) #shape 2*12*1024*4
     criterion_grasp_angle_class = nn.CrossEntropyLoss(reduction='none')
     grasp_angle_class_score = end_points['grasp_angle_cls_pred']
-    grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, target_angles_cls)
+    grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, smooth_target_angles_cls)
     grasp_angle_class_loss = torch.sum(grasp_angle_class_loss * loss_mask) / (loss_mask.sum() + 1e-6)
     end_points['loss/stage2_grasp_angle_class_loss'] = grasp_angle_class_loss
     grasp_angle_class_pred = torch.argmax(grasp_angle_class_score, 1)
