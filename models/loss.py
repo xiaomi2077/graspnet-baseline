@@ -131,6 +131,6 @@ def compute_grasp_loss(end_points, use_template_in_training=True):
     grasp_tolerance_loss = torch.sum(grasp_tolerance_loss * loss_mask) / (loss_mask.sum() + 1e-6)
     end_points['loss/stage2_grasp_tolerance_loss'] = grasp_tolerance_loss
 
-    grasp_loss = grasp_score_loss + grasp_angle_class_loss\
+    grasp_loss = grasp_score_loss + 0.05*grasp_angle_class_loss\
                 + grasp_width_loss + grasp_tolerance_loss
     return grasp_loss, end_points

@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=0 python train.py --camera realsense --log_dir /home/data/chenzhenshan/develop/model_train_logs/angle_loss_circular_smooth_label_4 --batch_size 2 --dataset_root /home/data/dataset/graspnet
+CUDA_VISIBLE_DEVICES=0 python train.py --camera realsense --log_dir /home/data/chenzhenshan/develop/model_train_logs/angle_loss_circular_smooth_label_5 --batch_size 2 --dataset_root /home/data/dataset/graspnet
