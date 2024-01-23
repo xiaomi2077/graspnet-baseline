@@ -9,6 +9,7 @@ import numpy as np
 import sys
 import os
 import time
+import math
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -17,7 +18,7 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 
 from loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE, THRESH_GOOD, THRESH_BAD,\
                        transform_point_cloud, generate_grasp_views,\
-                       batch_viewpoint_params_to_matrix, huber_loss
+                       batch_viewpoint_params_to_matrix, huber_loss,myAngleLoss
 
 def get_loss(end_points):
     objectness_loss, end_points = compute_objectness_loss(end_points)
@@ -103,18 +104,26 @@ def compute_grasp_loss(end_points, use_template_in_training=True):
 
     # 2. inplane rotation cls loss
     target_angles_cls = target_labels_inds.squeeze(2) # (B, Ns, D)
-    criterion_grasp_angle_class = nn.CrossEntropyLoss(reduction='none')
+    criterion_grasp_angle_class = myAngleLoss()
     grasp_angle_class_score = end_points['grasp_angle_cls_pred']
-    grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, target_angles_cls)
+    grasp_angle_class_loss = criterion_grasp_angle_class(grasp_angle_class_score, target_angles)
     grasp_angle_class_loss = torch.sum(grasp_angle_class_loss * loss_mask) / (loss_mask.sum() + 1e-6)
     end_points['loss/stage2_grasp_angle_class_loss'] = grasp_angle_class_loss
-    grasp_angle_class_pred = torch.argmax(grasp_angle_class_score, 1)
+    grasp_angle_class_pred = grasp_angle_class_score
     #todo 0度准确率<15<30 可能和旋转目标框检测在0度跳变有关
-    end_points['stage2_grasp_angle_class_acc/0_degree'] = (grasp_angle_class_pred==target_angles_cls)[loss_mask.bool()].float().mean()
-    acc_mask_15 = ((torch.abs(grasp_angle_class_pred-target_angles_cls)<=1) | (torch.abs(grasp_angle_class_pred-target_angles_cls)>=A-1))
-    end_points['stage2_grasp_angle_class_acc/15_degree'] = acc_mask_15[loss_mask.bool()].float().mean()
-    acc_mask_30 = ((torch.abs(grasp_angle_class_pred-target_angles_cls)<=2) | (torch.abs(grasp_angle_class_pred-target_angles_cls)>=A-2))
-    end_points['stage2_grasp_angle_class_acc/30_degree'] = acc_mask_30[loss_mask.bool()].float().mean()
+    # end_points['stage2_grasp_angle_class_acc/0_degree'] = (grasp_angle_class_pred==target_angles_cls)[loss_mask.bool()].float().mean()
+    # acc_mask_15 = ((torch.abs(grasp_angle_class_pred-target_angles_cls)<=1) | (torch.abs(grasp_angle_class_pred-target_angles_cls)>=A-1))
+    # end_points['stage2_grasp_angle_class_acc/15_degree'] = acc_mask_15[loss_mask.bool()].float().mean()
+    # acc_mask_30 = ((torch.abs(grasp_angle_class_pred-target_angles_cls)<=2) | (torch.abs(grasp_angle_class_pred-target_angles_cls)>=A-2))
+    # end_points['stage2_grasp_angle_class_acc/30_degree'] = acc_mask_30[loss_mask.bool()].float().mean()
+    acc_mask_0 = ((torch.abs(grasp_angle_class_pred-target_angles)<=math.pi/12) | (torch.abs(grasp_angle_class_pred-target_angles)>=math.pi-math.pi/12))
+    end_points['stage2_grasp_angle_class_acc/0-15_degree'] = acc_mask_0[loss_mask.bool()].float().mean()
+
+    acc_mask_15 = ((torch.abs(grasp_angle_class_pred-target_angles)<=math.pi/6) | (torch.abs(grasp_angle_class_pred-target_angles)>=math.pi-math.pi/6))
+    end_points['stage2_grasp_angle_class_acc/0-30_degree'] = acc_mask_15[loss_mask.bool()].float().mean()
+
+    acc_mask_30 = ((torch.abs(grasp_angle_class_pred-target_angles)<=math.pi/4) | (torch.abs(grasp_angle_class_pred-target_angles)>=math.pi-math.pi/4))
+    end_points['stage2_grasp_angle_class_acc/0-45_degree'] = acc_mask_30[loss_mask.bool()].float().mean()
 
     # 3. width reg loss
     grasp_width_pred = torch.gather(end_points['grasp_width_pred'], 1, target_labels_inds_).squeeze(1)
